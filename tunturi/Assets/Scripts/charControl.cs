@@ -13,6 +13,7 @@ public class charControl : MonoBehaviour
 	public float moveSpeed = 3.0f;
 	public float gravity = 9.81f;
 	public int maxMoves;
+	public float interactionRange = 1.0f;
     // Start is called before the first frame update
     void Start()
     {
@@ -104,7 +105,21 @@ public class charControl : MonoBehaviour
 			hasJumped = true;
 			controller.Move(pVelocity * Time.deltaTime);
 		}
-		
+		if (Input.GetKeyDown(KeyCode.E)) {
+			// kerataan rangessa olevat gameobjektit taulukkoon
+			Collider[] collidersInRange = Physics.OverlapSphere(gameObject.transform.position, interactionRange);
+			// kaydaan kaikki keratyt gameobjektit lapi
+			foreach (var obj in collidersInRange) {
+				// jos objektista loytyy IInteractablen toteuttava luokka, kutsutaan Interact() -funktiota
+				IInteractable interactableObj = obj.GetComponent<IInteractable>();
+				if (interactableObj != null) {
+					interactableObj.Interact();
+				}
+				// if (obj is IInteractable interactableObj) {
+				// 	interactableObj.Interact();
+				// }
+			}
+		}
 
 		pVelocity.y -= (gravity * Time.deltaTime);
 		
