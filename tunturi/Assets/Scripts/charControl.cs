@@ -24,78 +24,55 @@ public class charControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		// Vaihdetaan ohjausmoodia, jos painetaan nappia
-		if (Input.GetButtonDown("Fire1")) {
-			if (turnBased) { // Asetetaan vapaaliikemoodi
-				turnBased = false;
-				materiaali.SetColor("_Color",Color.white);
-			}
-			else { // Asetetaan vuoropohjamoodi aktiiviseksi, vihreä väri merkkaa, että liikkeitä on jäljellä.
-				turnBased = true;
-				maxMoves = 5;
-				materiaali.SetColor("_Color",Color.green);
-			}
+		// The designated button changes the movement mode of the player by flipping the current mode
+		if (Input.GetButtonDown("Fire3")) {
+			flipTurnbased();
 		}
         float verticalInput = Input.GetAxis("Vertical");
 		float horizontalInput = Input.GetAxis("Horizontal");
-		if (turnBased)  // Vuoropohjaisen liikkeen logiikka - Jokainen liike kuluttaa 'pisteen'
+		if (turnBased)  // Turn-based movement logic - Once the amount of moves has been used, controls are locked
 		{
+			if(materiaali.GetColor("_Color") != Color.green && materiaali.GetColor("_Color") != Color.red) {
+				materiaali.SetColor("_Color",Color.green);
+			}
 			if (maxMoves > 0) {
 				if (Input.GetKeyDown("d")) {
 					transform.Translate(1,0,0);
 					maxMoves--;
+					Debug.Log("Moves remaining: " + maxMoves);
 				}
 				else if (Input.GetKeyDown("s")) {
 					transform.Translate(0,0,-1);
 					maxMoves--;
+					Debug.Log("Moves remaining: " + maxMoves);
 				}
 				else if (Input.GetKeyDown("a")) {
 					transform.Translate(-1,0,0);
 					maxMoves--;
+					Debug.Log("Moves remaining: " + maxMoves);
 				}
 				else if (Input.GetKeyDown("w")) {
 					transform.Translate(0,0,1);
 					maxMoves--;
-				} // Jos liikkeet loppuvat, maalataan pelaaja punaiseksi
+					Debug.Log("Moves remaining: " + maxMoves);
+				} // A visual indicator for 0 moves
 				if (maxMoves == 0) { 
 					materiaali.SetColor("_Color",Color.red);
 				}
 			}
 
-			/*switch (horizontalInput < 0)
-			{	
-				case false:
-					transform.Translate(1,0,0);
-					horizontalInput = 0.0f;
-					break;
-				case true:
-					transform.Translate(-1,0,0);
-					horizontalInput = 0.0f;
-					break;
-				default:
-					switch (verticalInput < 0)
-					{
-					case false:
-						transform.Translate(0,0,1);
-						verticalInput = 0.0f;
-						break;
-					case true:
-						transform.Translate(0,0,-1);
-						verticalInput = 0.0f;
-						break;
-					default:
-						break;
-					}
-					break;
-			}*/
 		}
-		else // Vapaaliikkeen logiikka
+		else // The logic of free, unrestricted movement. Includes jumping.
 		{
-		Vector3 mvmnt = new Vector3(horizontalInput, 0 ,verticalInput);
-		controller.Move(mvmnt * moveSpeed * Time.deltaTime);
-		if (controller.isGrounded && pVelocity.y < 0) {
-			pVelocity.y = 0;
-			hasJumped = false;
+			if(materiaali.GetColor("_Color") != Color.white) {
+				materiaali.SetColor("_Color",Color.white);
+			}
+			
+			Vector3 mvmnt = new Vector3(horizontalInput, 0 ,verticalInput);
+			controller.Move(mvmnt * moveSpeed * Time.deltaTime);
+			if (controller.isGrounded && pVelocity.y < 0) {
+				pVelocity.y = 0;
+				hasJumped = false;
 		} 		
 		if (pVelocity.y == 0) {
 			hasJumped = false;
@@ -128,6 +105,35 @@ public class charControl : MonoBehaviour
 			
 		
     }
-
+	// Universal function for flipping the turn-based mode
+	private void flipTurnbased() {
+		if (turnBased) { // Free-play mode is engaged
+			turnBased = false;
+		}
+		else { // Turn-based mode is engaged, the amount of moves a player has
+			turnBased = true;
+			maxMoves = 5;
+			Debug.Log("Moves remaining: " + maxMoves);
+		}
+	}
+	
+	// Default text of the button
+	public string modeButtonText = "Free-roam";
+	// GUI-elements for HUD, current implementation contains a button for movement mode which reactively changes its' text
+	void OnGUI() {
+		if (GUI.Button (new Rect(0, Screen.height-150, 100, 50), modeButtonText)) {
+			if (turnBased) {
+			//turnBased = false;
+				flipTurnbased();
+				modeButtonText = "Free-roam";
+				Debug.Log("HÄH");
+			}
+			else {
+				//turnBased = true;
+				flipTurnbased();
+				modeButtonText = "Turn-based";
+			}
+		}
+    }
 
 }
