@@ -4,8 +4,23 @@ using UnityEngine;
 
 public class Container : MonoBehaviour, IInteractable
 {
+    private bool uiElementVisible;
+
     public void Interact() {
         print("A container was opened");
+        StartCoroutine(showUiElement());
+    }
+
+    private IEnumerator showUiElement() {
+        uiElementVisible = true;
+        yield return new WaitForSeconds(3f);
+        uiElementVisible = false;
+    }
+
+    void OnGUI() {
+        if (uiElementVisible) {
+            GUI.Box(new Rect(10, 100, 200, 50), "You opened a chest!");
+        }
     }
     // Start is called before the first frame update
     // void Start()
