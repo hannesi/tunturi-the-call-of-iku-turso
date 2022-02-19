@@ -41,8 +41,8 @@ public class charControl : MonoBehaviour
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
 				}
-				else if (Input.GetKeyDown("s")) {
-					transform.Translate(0,0,-1);
+				else if (Input.GetKeyDown("s")) {//TODO mainitse graafikoille transformin muutoksesta
+					transform.Translate(0,1,0);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
 				}
@@ -52,7 +52,7 @@ public class charControl : MonoBehaviour
 					Debug.Log("Moves remaining: " + maxMoves);
 				}
 				else if (Input.GetKeyDown("w")) {
-					transform.Translate(0,0,1);
+					transform.Translate(0,-1,0);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
 				} // A visual indicator for 0 moves
