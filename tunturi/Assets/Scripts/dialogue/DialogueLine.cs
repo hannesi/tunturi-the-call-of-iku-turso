@@ -1,14 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[System.Serializable]
 public class DialogueLine
 {
-    public string speaker { get; }
-    public string line { get; }
-    public Dictionary<int,string> replies { get; }
+    public int speakerId;
+    public string line;
+    public DialogueReply[] replies;
+    // public Dictionary<int,string> replies;
+    //TODO: SideEffect
+    //TODO: Requirement
 
-    public DialogueLine(string speaker, string line, Dictionary<int,string> replies){
-        this.speaker = speaker;
+    public DialogueLine(int speakerId, string line, DialogueReply[] replies){
+        this.speakerId = speakerId;
         this.line = line;
         this.replies = replies;
     }

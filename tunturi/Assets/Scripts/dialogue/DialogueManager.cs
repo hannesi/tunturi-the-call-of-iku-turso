@@ -18,7 +18,7 @@ public class DialogueManager : MonoBehaviour
     // TODO: fiksumpi toteutus dialogistagen seuraamiselle
     private int dialogueStage = -1;
     private int previousDialogueState = -1;
-    private DialogueLine[] dialogue;
+    private Dialogue dialogue;
 
     void Update() {
         if (dialogueStage != previousDialogueState) {
@@ -42,16 +42,16 @@ public class DialogueManager : MonoBehaviour
     // shows a line, selection of replies etc on screen
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
-        DialogueLine dl = dialogue[dialogueStage];
-        lineSpeakerOutput.text = dl.speaker;
+        DialogueLine dl = dialogue.lines[dialogueStage];
+        lineSpeakerOutput.text = dialogue.participants[dl.speakerId];
         lineOutput.text = dl.line;
         for (int i = 0; i < replyButtons.Length; i++) {
-            if (i < dl.replies.Count) {
+            if (i < dl.replies.Length) {
                 replyButtons[i].SetActive(true);
                 // TODO: Elegantimpi ratkaisu? Kippaa jos viittaa suoraa AddListenerin parametrissa
-                int newStage = dl.replies.ElementAt(i).Key;
+                int newStage = dl.replies[i].leadsToDialogueStage;
                 replyButtons[i].GetComponent<Button>().onClick.AddListener(() => dialogueStage = newStage);
-                replyButtons[i].GetComponentInChildren<TMP_Text>().text = dl.replies.ElementAt(i).Value;
+                replyButtons[i].GetComponentInChildren<TMP_Text>().text = dl.replies[i].replyLine;
             } else {
                 replyButtons[i].SetActive(false);
             }
@@ -59,7 +59,7 @@ public class DialogueManager : MonoBehaviour
     }
 
     // initiates a conversation
-    public void InitConversation(DialogueLine[] dialogue) {
+    public void InitConversation(Dialogue dialogue) {
         this.dialogue = dialogue;
         dialogueStage = 0;
         ShowCanvas();
