@@ -19,7 +19,7 @@ public class Container : MonoBehaviour, IInteractable
 
     void OnGUI() {
         if (uiElementVisible) {
-            GUI.Box(new Rect(10, 100, 200, 50), "You eat a hearty meal! \n Health restored.");
+            GUI.Box(new Rect(10, 100, 200, 50), "You opened a chest.");
         }
     }
     // Start is called before the first frame update
