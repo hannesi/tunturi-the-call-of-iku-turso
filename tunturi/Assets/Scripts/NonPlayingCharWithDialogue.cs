@@ -19,7 +19,7 @@ public class NonPlayingCharWithDialogue : MonoBehaviour, IInteractable
 
     void OnGUI() {
         if (uiElementVisible) {
-            GUI.Box(new Rect(10, 100, 200, 50), "NPC: Hello there, adventurer!");
+            GUI.Box(new Rect(10, 100, 600, 50), "Recover the Sacred Goblet from the killer Cylinders! \n You recall the rune R progresses turns, and the rune F changes targets.");
         }
     }
     // Start is called before the first frame update

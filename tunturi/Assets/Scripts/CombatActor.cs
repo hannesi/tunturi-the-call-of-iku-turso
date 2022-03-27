@@ -20,7 +20,7 @@ public class CombatActor : MonoBehaviour {
 		// Overlapsphere (consider placing combatactors in own layer to save space)
 		// Choose closest target, calculate distance, move to if melee, shoot if ranged
 		int layerMask = 1 << 8;
-		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, 500, layerMask);
+		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, 8, layerMask);
 		Debug.Log("Found "+nearbyColliders.Length+" potential targets");
 		GameObject closestActor = null;
 		Vector3 closestVector = new Vector3(0,0,0);
@@ -93,34 +93,44 @@ public class CombatActor : MonoBehaviour {
 	
 	public void attack(List<CombatActor> combatants) {
 		GameObject closestEnemy = target();
-		if (closestEnemy == null) {
-			Debug.Log("Attack failed, no nearby targets");
-			return;
+		float maxRange = 8;
+		if (closestEnemy != null) {
+			if (Vector3.Distance(closestEnemy.transform.position, gameObject.transform.position) > maxRange ) {
+				Debug.Log("Attack failed, no nearby targets");
+				return;
+				}
+			if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
+				Debug.Log(gameObject.name + ":n isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
+				targetActor.setHP(targetActor.stats[1] - stats[0]);
+				Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
+				if(targetActor.getHP() < 0) {
+					combatants.Remove(targetActor);
+					Destroy(closestEnemy);
+				}			
 			}
-		if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
-			Debug.Log(gameObject.name + ":n isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
-			targetActor.setHP(targetActor.stats[1] - stats[0]);
-			Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
-			if(targetActor.getHP() < 0) {
-				combatants.Remove(targetActor);
-				Destroy(closestEnemy);
-			}			
+		} else {
+			Debug.Log("Attack failed, no nearby targets");
 		}
 	}
 	// Alternate attack to a predetermined enemy
 	public void attack(List<CombatActor> combatants, GameObject targetedEnemy) {
-		if (targetedEnemy == null) {
+		float maxRange = 12;
+		if (targetedEnemy != null) {
+			if (Vector3.Distance(targetedEnemy.transform.position, gameObject.transform.position) > maxRange) {
+				Debug.Log("Attack failed, no nearby targets");
+				return;
+				}
+			if (targetedEnemy.TryGetComponent(out CombatActor targetActor)) {
+					Debug.Log("Isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
+				targetActor.setHP(targetActor.stats[1] - stats[0]);
+				Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
+				if(targetActor.getHP() <= 0) {
+					combatants.Remove(targetActor);
+					Destroy(targetedEnemy);
+				}
+			}
+		} else {
 			Debug.Log("Attack failed, no nearby targets");
-			return;
-			}
-		if (targetedEnemy.TryGetComponent(out CombatActor targetActor)) {
-			Debug.Log("Isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
-			targetActor.setHP(targetActor.stats[1] - stats[0]);
-			Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
-			if(targetActor.getHP() < 0) {
-				combatants.Remove(targetActor);
-				Destroy(targetedEnemy);
-			}
 		}
 	}
 	
@@ -130,6 +140,10 @@ public class CombatActor : MonoBehaviour {
 	
 	public int getDMG() {
 		return stats[0];
+	}
+	
+	public void setDMG(int amount) {
+		stats[0] = amount;
 	}
 	
 	public int getHP() {

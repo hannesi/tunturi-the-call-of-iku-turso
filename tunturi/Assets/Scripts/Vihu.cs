@@ -11,7 +11,7 @@ class Vihu : CombatActor {
 	public Vihu() {
 		//name = monsterName;
 		stats[0] = 3;
-		stats[1] = 20;
+		stats[1] = 24;
 		stats[2] = 13;
 		stats[3] = 5;
 	}

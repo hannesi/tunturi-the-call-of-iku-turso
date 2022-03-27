@@ -43,6 +43,9 @@ public class charControl : MonoBehaviour
 				materiaali.SetColor("_Color",Color.green);
 			}
 			if (maxMoves > 0) {
+				if(materiaali.GetColor("_Color") != Color.green) {
+					materiaali.SetColor("_Color",Color.green);
+				}
 				if (Input.GetKeyDown("d") && noCollisions(Vector3.right)) {
 					transform.Translate(Vector3.right);
 					maxMoves--;
@@ -62,10 +65,11 @@ public class charControl : MonoBehaviour
 					transform.Translate(Vector3.forward);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
-				} // A visual indicator for 0 moves
-				if (maxMoves == 0) { 
+				} 
+			}
+			// A visual indicator for 0 moves
+			if (maxMoves == 0) { 
 					materiaali.SetColor("_Color",Color.red);
-				}
 			}
 			if (inCombat && Input.GetKeyDown("r")) {
 				if (playerTarget != null) {
@@ -138,6 +142,10 @@ public class charControl : MonoBehaviour
 			maxMoves = 5;
 			Debug.Log("Moves remaining: " + maxMoves);
 		}
+	}
+	
+	public void replenishAP() {
+		maxMoves = 5;
 	}
 	
 	public List<CombatActor> combatants = new List<CombatActor>();

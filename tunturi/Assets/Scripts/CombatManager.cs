@@ -10,6 +10,11 @@ public class CombatManager : MonoBehaviour
 		if (turn >= combatants.Count) {
 			turn = 0;
 			round++;
+			foreach(var comb in combatants) {
+				if (comb.TryGetComponent(out charControl cControl)) {
+					cControl.replenishAP();
+				}
+			}
 		}
 		Debug.Log("Processing turn "+(turn+1)+" of round "+round);
 		combatants[turn].attack(combatants);
@@ -43,6 +48,8 @@ public class CombatManager : MonoBehaviour
 	public static void findCombatants(List<CombatActor> combatants) {
 		GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 		Debug.Log("Found "+temp.Length+" allies");
+		Vector3 playerPos = temp[0].transform.position;
+		float maxDistance = 12;
 		for(int i = 0; i < temp.Length; i++) {
 			if (temp[i].TryGetComponent(out CombatActor actor)) {
 				combatants.Add(actor);
@@ -51,7 +58,9 @@ public class CombatManager : MonoBehaviour
 		temp = GameObject.FindGameObjectsWithTag("EnemyFaction");
 		for(int i = 0; i < temp.Length; i++) {
 			if (temp[i].TryGetComponent(out CombatActor actor)) {
-				combatants.Add(actor);
+				if (Vector3.Distance(actor.gameObject.transform.position, playerPos) < maxDistance) {
+					combatants.Add(actor);
+				}
 			}
 		}
 		Debug.Log("Found "+temp.Length+" enemies");
