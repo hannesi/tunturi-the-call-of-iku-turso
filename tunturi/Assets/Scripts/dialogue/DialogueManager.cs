@@ -20,6 +20,11 @@ public class DialogueManager : MonoBehaviour
     private int previousDialogueState = -1;
     private Dialogue dialogue;
 
+    private PropertyManager _propertyManager;
+
+    void Start() {
+        _propertyManager = GameObject.Find("PropertyManager").GetComponent<PropertyManager>();
+    }
     void Update() {
         if (dialogueStage != previousDialogueState) {
             if (dialogueStage == -1) {
@@ -45,17 +50,35 @@ public class DialogueManager : MonoBehaviour
         DialogueLine dl = dialogue.lines[dialogueStage];
         lineSpeakerOutput.text = dialogue.participants[dl.speakerId];
         lineOutput.text = dl.line;
-        for (int i = 0; i < replyButtons.Length; i++) {
-            if (i < dl.replies.Length) {
-                replyButtons[i].SetActive(true);
+        foreach (GameObject g in replyButtons) {
+            g.GetComponent<Button>().onClick.RemoveAllListeners();
+            g.SetActive(false);
+            // replyButtons[i].GetComponent<Button>().onClick.RemoveAllListeners();
+        }
+        int nextUnusedButtonIndex = 0;
+        foreach (DialogueReply reply in dl.replies) {
+            if (nextUnusedButtonIndex == 4) return;             // TODO: better implementation for buttons
+            if (reply.requirements.Length == 0 
+                || reply.requirements
+                            .Select(requirement => _propertyManager.Compare(requirement))
+                            .All(response => response)
+                ) {
+                replyButtons[++nextUnusedButtonIndex].SetActive(true);
                 // TODO: Elegantimpi ratkaisu? Kippaa jos viittaa suoraa AddListenerin parametrissa
-                int newStage = dl.replies[i].leadsToDialogueStage;
-                replyButtons[i].GetComponent<Button>().onClick.AddListener(() => dialogueStage = newStage);
-                replyButtons[i].GetComponentInChildren<TMP_Text>().text = dl.replies[i].replyLine;
-            } else {
-                replyButtons[i].SetActive(false);
+                // int newStage = dl.replies[i].leadsToDialogueStage;
+                // replyButtons[i].GetComponent<Button>().onClick.AddListener(() => dialogueStage = newStage);
+                replyButtons[nextUnusedButtonIndex].GetComponent<Button>().onClick.AddListener(() => handleStageChange(reply));
+                replyButtons[nextUnusedButtonIndex].GetComponentInChildren<TMP_Text>().text = reply.replyLine;
             }
         }
+    }
+
+    private void handleStageChange(DialogueReply reply) {
+        foreach (PropertyModificationRequest se in reply.sideEffects)
+        {
+            _propertyManager.Modify(se);
+        }
+        dialogueStage = reply.leadsToDialogueStage;
     }
 
     // initiates a conversation

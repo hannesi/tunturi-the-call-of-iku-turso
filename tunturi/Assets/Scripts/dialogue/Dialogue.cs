@@ -4,6 +4,6 @@ using System.Collections.Generic;
 [System.Serializable]
 public class Dialogue
 {
-    public string[] participants; // { get; }
-    public DialogueLine[] lines; // { get; }
+    public string[] participants;
+    public DialogueLine[] lines;
 }
