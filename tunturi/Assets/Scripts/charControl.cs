@@ -223,7 +223,7 @@ public class charControl : MonoBehaviour
 		GUI.Button(new Rect(0, Screen.height-300, 150, 50), ("Targeting: "+targetText));
 		GUI.Button(new Rect(Screen.width-300, Screen.height-300, 250, 50), ("Current turn: "+actorText));
 		GUI.Button(new Rect(Screen.width-350, Screen.height-250, 350, 50), ("Combat log \n "+latestAction));
-		GUI.Button(new Rect(0, Screen.height-250, 200, 50), ("Cycle targets in combat with F."));
+		GUI.Button(new Rect(0, Screen.height-250, 200, 50), ("Cycle targets in combat with F. \n Attack with R."));
 		if (GUI.Button (new Rect(0, Screen.height-150, 100, 50), modeButtonText) && !inCombat) {
 			if (turnBased) {
 			//turnBased = false;
