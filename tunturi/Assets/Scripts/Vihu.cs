@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 class Vihu : CombatActor {
+	
+	private Material materiaali; 
+	
 	private bool inCombat = false;
 	//private int[] stats;
 	//private string name;
@@ -39,4 +42,18 @@ class Vihu : CombatActor {
 			player.initCombat();
 		}
 	}
+	
+	public void indicateAggro() {
+		materiaali.SetColor("_Color",Color.red);
+	}
+	
+	public void indicateTurn() {
+		materiaali.SetColor("_Color",Color.yellow);
+	}
+	
+    void Start()
+    {
+		materiaali = gameObject.GetComponent<Renderer>().material; // Haetaan materiaali moodivaihdoksia varten
+    }
+	
 }

@@ -20,7 +20,8 @@ public class CombatActor : MonoBehaviour {
 		// Overlapsphere (consider placing combatactors in own layer to save space)
 		// Choose closest target, calculate distance, move to if melee, shoot if ranged
 		int layerMask = 1 << 8;
-		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, 8, layerMask);
+		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, CombatManager.MAX_DISTANCE, layerMask);
+		Array.Sort(nearbyColliders, CombatManager.sortCombatantsFromColliders);
 		Debug.Log("Found "+nearbyColliders.Length+" potential targets");
 		GameObject closestActor = null;
 		Vector3 closestVector = new Vector3(0,0,0);
@@ -49,46 +50,48 @@ public class CombatActor : MonoBehaviour {
 		// Overlapsphere (consider placing combatactors in own layer to save space)
 		// Choose closest target, calculate distance, move to if melee, shoot if ranged
 		int layerMask = 1 << 8;
-		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, 500, layerMask);
+		Collider[] nearbyColliders = Physics.OverlapSphere(gameObject.transform.position, CombatManager.MAX_DISTANCE, layerMask);
+		Array.Sort(nearbyColliders, CombatManager.sortCombatantsFromColliders);
 		Debug.Log("Found "+nearbyColliders.Length+" potential targets");
 		GameObject targetedActor = null;
-		GameObject currentTarget;
+		//GameObject currentTarget = null;
 		if (gameObject.TryGetComponent(out charControl dController)) {
-				currentTarget = dController.playerTarget;
-				while(nearbyColliders[i].gameObject == currentTarget) {
-					i++;
-					if(i == nearbyColliders.Length) {
-						i = 0;
-						if (gameObject.TryGetComponent(out charControl cController)) {
-							cController.targetCounter = 0;
+				if (i >= nearbyColliders.Length) {
+					dController.targetCounter = 0;
+					i = 0;
+					targetedActor = nearbyColliders[i].gameObject;
+					dController.targetCounter++;
+				} else if (dController.playerTarget == nearbyColliders[i].gameObject) {
+					int k = i;
+					while (nearbyColliders[k].gameObject == dController.playerTarget) {
+						k++;
+						if (k > nearbyColliders.Length) {
+							Debug.Log("breaking");
+							k = 0;
 						}
 					}
+					i = k;
+					dController.targetCounter = i;
+					targetedActor = nearbyColliders[i].gameObject;
+					dController.targetCounter++;
+					
+				}
+				else { 
+					targetedActor = nearbyColliders[i].gameObject;
+					dController.targetCounter++;
 				}
 		}
-		//Vector3 closestVector = new Vector3(0,0,0);
-		//Vector3 tempClosest;
-		if (i == nearbyColliders.Length) {
-			i = 0;
-			if (gameObject.TryGetComponent(out charControl cController)) {
-				cController.targetCounter = 0;
-			}
-			
+
+		if (targetedActor != null) {
+		Debug.Log("i = "+i);
+		Debug.Log("Targeting "+targetedActor.name);
+		dController.updateTarget(targetedActor.name);
+		return targetedActor;
+		}
+		else {
+			return dController.playerTarget;
 		}
 		
-		if (nearbyColliders[i].gameObject != gameObject) {
-			//closestVector = nearbyColliders[i].gameObject.transform.position - transform.position;
-			targetedActor = nearbyColliders[i].gameObject;
-		}
-		if (i < nearbyColliders.Length) {
-			if (gameObject.TryGetComponent(out charControl cController)) {
-				cController.targetCounter++;
-			}
-		}
-		Debug.Log("i = "+i);
-		if (targetedActor != null) {
-		Debug.Log("Targeting "+targetedActor.name);
-		}
-		return targetedActor;
 	}
 	
 	public void attack(List<CombatActor> combatants) {
@@ -96,20 +99,45 @@ public class CombatActor : MonoBehaviour {
 		float maxRange = 8;
 		if (closestEnemy != null) {
 			if (Vector3.Distance(closestEnemy.transform.position, gameObject.transform.position) > maxRange ) {
+				
+				// Attack is logged to GUI combat log				
+				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+				foreach(var play in temp) {
+					if(play.TryGetComponent(out charControl cControl)) {
+						cControl.logAction(name+"'s attack failed, no nearby targets");
+					}
+				}				
+				
 				Debug.Log("Attack failed, no nearby targets");
 				return;
 				}
 			if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
-				Debug.Log(gameObject.name + ":n isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
+				
+				// Attack is logged to GUI combat log				
+				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+				foreach(var play in temp) {
+					if(play.TryGetComponent(out charControl cControl)) {
+						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage!");
+					}
+				}				
+				
+				Debug.Log(gameObject.name + " strikes " + targetActor.name + " and deals " + stats[0] + " damage!");
 				targetActor.setHP(targetActor.stats[1] - stats[0]);
-				Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
+				Debug.Log(targetActor.name + " HP is now "+targetActor.getHP());
 				if(targetActor.getHP() < 0) {
 					combatants.Remove(targetActor);
 					Destroy(closestEnemy);
 				}			
 			}
 		} else {
-			Debug.Log("Attack failed, no nearby targets");
+			// Attack is logged to GUI combat log				
+			GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+			foreach(var play in temp) {
+				if(play.TryGetComponent(out charControl cControl)) {
+					cControl.logAction(name+"'s attack failed, no nearby targets");
+				}
+			}				
+			Debug.Log(name+"'s attack failed, no nearby targets");
 		}
 	}
 	// Alternate attack to a predetermined enemy
@@ -117,20 +145,51 @@ public class CombatActor : MonoBehaviour {
 		float maxRange = 12;
 		if (targetedEnemy != null) {
 			if (Vector3.Distance(targetedEnemy.transform.position, gameObject.transform.position) > maxRange) {
+				
+				// Attack is logged to GUI combat log				
+				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+				foreach(var play in temp) {
+					if(play.TryGetComponent(out charControl cControl)) {
+						cControl.logAction(name+"'s attack failed, no nearby targets");
+					}
+				}					
+				
+				
 				Debug.Log("Attack failed, no nearby targets");
 				return;
 				}
 			if (targetedEnemy.TryGetComponent(out CombatActor targetActor)) {
-					Debug.Log("Isku tekee " + targetActor.name + " " + stats[0] + " vahinkoa!");
+				// Attack is logged to GUI combat log				
+				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+				foreach(var play in temp) {
+					if(play.TryGetComponent(out charControl cControl)) {
+						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage!");
+					}
+				}
+				
+				Debug.Log(name+" strikes " + targetActor.name + " for " + stats[0] + " damage!");
 				targetActor.setHP(targetActor.stats[1] - stats[0]);
 				Debug.Log(targetActor.name + " HP on nyt "+targetActor.getHP());
 				if(targetActor.getHP() <= 0) {
 					combatants.Remove(targetActor);
 					Destroy(targetedEnemy);
+					//GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+					foreach(var play in temp) {
+						if(play.TryGetComponent(out charControl cControl)) {
+							cControl.hideIndicator();
+						}
+					}
 				}
 			}
 		} else {
-			Debug.Log("Attack failed, no nearby targets");
+			// Attack is logged to GUI combat log				
+			GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+			foreach(var play in temp) {
+				if(play.TryGetComponent(out charControl cControl)) {
+					cControl.logAction(name+"'s attack failed, no nearby targets");
+				}
+			}				
+			Debug.Log(name+"'s attack failed, no nearby targets");
 		}
 	}
 	
