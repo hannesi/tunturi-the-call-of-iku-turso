@@ -117,7 +117,7 @@ public class CombatActor : MonoBehaviour {
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
 					if(play.TryGetComponent(out charControl cControl)) {
-						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage!");
+						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
 					}
 				}				
 				
@@ -163,7 +163,7 @@ public class CombatActor : MonoBehaviour {
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
 					if(play.TryGetComponent(out charControl cControl)) {
-						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage!");
+						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
 					}
 				}
 				
