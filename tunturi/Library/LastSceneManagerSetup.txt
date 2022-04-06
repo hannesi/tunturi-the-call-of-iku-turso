@@ -1,5 +1,5 @@
 sceneSetups:
-- path: Assets/Scenes/dev-scenes/interact-dev-scene.unity
+- path: Assets/Scenes/testiScene.unity
   isLoaded: 1
   isActive: 1
   isSubScene: 0
