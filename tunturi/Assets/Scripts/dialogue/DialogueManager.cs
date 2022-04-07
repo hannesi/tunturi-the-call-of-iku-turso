@@ -45,6 +45,7 @@ public class DialogueManager : MonoBehaviour
     }
 
     // shows a line, selection of replies etc on screen
+    // SOS: Spagettivaroitus, läpikulku omalla vastuulla
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
         DialogueLine dl = dialogue.lines[dialogueStage];
@@ -58,17 +59,22 @@ public class DialogueManager : MonoBehaviour
         int nextUnusedButtonIndex = 0;
         foreach (DialogueReply reply in dl.replies) {
             if (nextUnusedButtonIndex == 4) return;             // TODO: better implementation for buttons
-            if (reply.requirements.Length == 0 
-                || reply.requirements
-                            .Select(requirement => _propertyManager.Compare(requirement))
-                            .All(response => response)
-                ) {
-                replyButtons[++nextUnusedButtonIndex].SetActive(true);
-                // TODO: Elegantimpi ratkaisu? Kippaa jos viittaa suoraa AddListenerin parametrissa
-                // int newStage = dl.replies[i].leadsToDialogueStage;
-                // replyButtons[i].GetComponent<Button>().onClick.AddListener(() => dialogueStage = newStage);
+
+            // true if reply has no requirements or all requirements pass 
+            bool requirementsPassed = reply.requirements.Length == 0 
+                                        || reply.requirements
+                                                    .Select(requirement => _propertyManager.Compare(requirement))
+                                                    .All(response => response.Item1);
+
+            string prefix = reply.requirements.Length != 0 ? $"[{reply.requirements[0].type} {_propertyManager.Compare(reply.requirements[0]).Item2}/{reply.requirements[0].value}] " : "";
+            replyButtons[++nextUnusedButtonIndex].SetActive(true);
+            // TODO: Elegantimpi ratkaisu? Kippaa jos viittaa suoraa AddListenerin parametrissa
+            // int newStage = dl.replies[i].leadsToDialogueStage;
+            // replyButtons[i].GetComponent<Button>().onClick.AddListener(() => dialogueStage = newStage);
+            replyButtons[nextUnusedButtonIndex].GetComponentInChildren<TMP_Text>().text = prefix + reply.replyLine;
+
+            if (requirementsPassed) {
                 replyButtons[nextUnusedButtonIndex].GetComponent<Button>().onClick.AddListener(() => handleStageChange(reply));
-                replyButtons[nextUnusedButtonIndex].GetComponentInChildren<TMP_Text>().text = reply.replyLine;
             }
         }
     }
