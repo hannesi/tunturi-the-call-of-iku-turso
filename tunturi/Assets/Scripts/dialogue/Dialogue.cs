@@ -6,4 +6,5 @@ public class Dialogue
 {
     public string[] participants;
     public DialogueLine[] lines;
+    public bool voiceEffects;
 }

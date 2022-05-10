@@ -29,28 +29,33 @@ public struct PropertyComparisonQuery
 }
 
 
-public class PropertyManager : MonoBehaviour
+public class PartyManager : MonoBehaviour
 {
-    // PartyMember whomst'd is used for character specific queries
-    public PartyMember target;
-    public void Modify(PropertyModificationRequest request)
+    public PartyMember[] partyMembers;
+    public void Start() {
+        foreach (PartyMember p in partyMembers)
+        {
+            Debug.Log(p.characterName);
+        }
+    }
+    public void ModifyProperty(PropertyModificationRequest request)
     {
         switch (request.type)
         {
             case PropertyType.Armor:
-                target.adjustARM(request.value);
-                Debug.Log($"Received {request.value} armor! New armor value: {target.getARM()}");
+                Debug.Log("TODO: armor modification");
                 break;
             default:
                 Debug.Log($"Unhandled PropertyModificationRequest! Type: {request.type}");
                 break;
         }
     } 
-    public (bool, int) Compare(PropertyComparisonQuery query)
+    public (bool, int) CompareProperty(PropertyComparisonQuery query)
     {
         // TODO: replace with an actual implementation: charValue value is supposed to be fetched from stats, gold amount etc with eg. a switch
         int charValue = query.type switch {
-            PropertyType.Dmg => target.getDMG(),
+            PropertyType.Dmg => partyMembers[0].getDMG(),
+            PropertyType.Armor => partyMembers[0].getARM(),
             _ => -1
         };
         // TODO: remove logging below after debugging
