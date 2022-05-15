@@ -94,6 +94,7 @@ public class CombatManager : MonoBehaviour
 			if (temp[i].TryGetComponent(out Vihu actor)) {
 				if (Vector3.Distance(actor.gameObject.transform.position, playerPos) < MAX_DISTANCE+2) {
 					combatants.Add(actor);
+					actor.SendMessage("haltMovement");
 					actor.indicateAggro();
 				}
 			}

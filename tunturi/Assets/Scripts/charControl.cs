@@ -13,6 +13,7 @@ public class charControl : MonoBehaviour
 	private bool inCombat = false;
 	private Material materiaali; 
 	private GameObject targetIndicator;
+	private GameObject grid;
 	
 	public float moveSpeed = 3.0f;
 	public float gravity = 9.81f;
@@ -20,24 +21,49 @@ public class charControl : MonoBehaviour
 	public float interactionRange = 1.0f;
 	
     // Start is called before the first frame update
+	// TODO: create grid and tile for instantiation
     void Start()
     {
+		
+		grid = GameObject.Find("baseGrid");
 		targetIndicator = GameObject.CreatePrimitive(PrimitiveType.Capsule);
 		targetIndicator.transform.position = new Vector3(0,-3,0);
 		targetIndicator.transform.localScale = new Vector3(0.25f,0.25f,0.25f);
 		materiaali = gameObject.GetComponent<Renderer>().material; // Haetaan ohjattavan materiaali moodivaihdoksia varten
         controller = gameObject.GetComponent("CharacterController") as CharacterController;
+		
+		mainCamera = gameObject.GetComponentInChildren<Camera>();
     }
+	
+	private Vector3 tempVector; //Temporary vector for storing movement in TB-mode
+	private Camera mainCamera;
+	
 	public int targetCounter = 0;
 	public GameObject playerTarget = null;
     // Update is called once per frame
     void Update()
     {
+		if (Input.GetKeyDown("j")) {
+			mainCamera.transform.RotateAround(transform.position, Vector3.up, 45);
+		}
+		if (Input.GetKeyDown("l")) {
+			mainCamera.transform.RotateAround(transform.position, Vector3.up, -45);
+		}
+		if (!inCombat && !turnBased) {
+			grid.transform.position = (Vector3.zero);
+		}
 		// The designated button changes the movement mode of the player by flipping the current mode
-		if (Input.GetButtonDown("Fire3") && !inCombat) {
+		if (Input.GetButtonDown("Fire3") && !inCombat && !hasJumped) {
 			flipTurnbased();
 			pPosition = transform.position; // Position is aligned to nearest grid square
 			transform.position = pPosition - new Vector3( (pPosition.x % 1) , 0 , (pPosition.y % 1) );
+			//GameObject grid = GameObject.Find("baseGrid");
+			if (turnBased) {
+			grid.transform.position = transform.position;
+			grid.transform.Translate(new Vector3 (0,-0.3f, 0));
+			} else {
+				grid.transform.position = new Vector3(0,0,0);
+			}
 			// TODO Add logic (Raycast?) to determine if space is empty
 		}
         float verticalInput = Input.GetAxis("Vertical");
@@ -52,24 +78,32 @@ public class charControl : MonoBehaviour
 					materiaali.SetColor("_Color",Color.green);
 				}
 				if (Input.GetKeyDown("d") && noCollisions(Vector3.right)) {
-					transform.Translate(Vector3.right);
+					//transform.Translate(Vector3.right);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
+					tempVector += Vector3.right;
+					placeTile(Vector3.right);
 				}
 				else if (Input.GetKeyDown("s") && noCollisions(Vector3.back)) {
-					transform.Translate(Vector3.back);
+					//transform.Translate(Vector3.back);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
+					tempVector += Vector3.back;
+					placeTile(Vector3.back);
 				}
 				else if (Input.GetKeyDown("a") && noCollisions(Vector3.left)) {
-					transform.Translate(Vector3.left);
+					//transform.Translate(Vector3.left);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
+					tempVector += Vector3.left;
+					placeTile(Vector3.left);
 				}
 				else if (Input.GetKeyDown("w") && noCollisions(Vector3.forward)) {
-					transform.Translate(Vector3.forward);
+					//transform.Translate(Vector3.forward);
 					maxMoves--;
 					Debug.Log("Moves remaining: " + maxMoves);
+					tempVector += Vector3.forward;
+					placeTile(Vector3.forward);
 				} 
 			}
 			// A visual indicator for 0 moves
@@ -88,6 +122,16 @@ public class charControl : MonoBehaviour
 				if (gameObject.TryGetComponent(out CombatActor playerActor)) {
 					playerTarget = playerActor.target(targetCounter);
 					targetIndicator.transform.position = (playerTarget.transform.position + (2*Vector3.up));
+				}
+			}
+			if (Input.GetKeyDown("enter")) {
+				transform.Translate(tempVector);
+				tempVector = Vector3.zero;
+				wipeTiles();
+				grid.transform.position = transform.position;
+				grid.transform.Translate(new Vector3 (0,-0.3f, 0));
+				if (!inCombat) {
+					replenishAP();
 				}
 			}
 
@@ -142,22 +186,43 @@ public class charControl : MonoBehaviour
     }
 	// Universal function for flipping the turn-based mode
 	private void flipTurnbased() {
+		//tempVector = Vector3.zero;
 		if (turnBased) { // Free-play mode is engaged
 			turnBased = false;
+			//grid.transform.position = transform.position;
+			grid.transform.Translate(Vector3.zero);
 			modeButtonText = "Free-roam";
 			hideIndicator();
+			wipeTiles();
 		}
 		else { // Turn-based mode is engaged, the amount of moves a player has
+			grid.transform.position = transform.position;
+			grid.transform.Translate(new Vector3 (0,-0.3f, 0));
 			turnBased = true;
 			modeButtonText = "Turn-based";
 			gameObject.transform.rotation = Quaternion.identity;
 			maxMoves = 5;
+			//resetTurnBased();
 			Debug.Log("Moves remaining: " + maxMoves);
 		}
 	}
 	
 	public void replenishAP() {
 		maxMoves = 5;
+	}
+	
+	public void resetTurnBased() {
+		maxMoves = 5;
+		//tileList.Clear();
+		tempVector = Vector3.zero;
+	}
+	
+	public void wipeTiles() {
+		foreach (GameObject obj in tileList) {
+			Destroy(obj);
+		}
+		tileList.Clear();
+		tempVector = Vector3.zero;
 	}
 	
 	public List<CombatActor> combatants = new List<CombatActor>();
@@ -213,6 +278,50 @@ public class charControl : MonoBehaviour
 		}
 	}
 	
+	// Places tile at given vector co-ordinates
+	// Intended for use in turn-based mode with the grid
+	// Requires baseTile and baseGrid to be within the scene to function
+	private List<GameObject> tileList = new List<GameObject>();
+	void placeTile(Vector3 moveDirection) { //moveDirection is directional vector, ex.(1,0,0)
+		//Instantiate from playerpos if first tile, otherwise from previous tile
+		GameObject origTile = GameObject.Find("baseTile");
+		Vector3 tilePos = moveDirection;
+		if (tileList.Count == 0) {
+			tilePos += transform.position;
+		} else {
+			tilePos += tileList[tileList.Count - 1].transform.position;
+		}
+		tilePos.y = 0.5f;
+		if (tileList.Count > 1 && tileList[tileList.Count-2].transform.position == tilePos) {
+			tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - tileList[tileList.Count-2].transform.position));
+			//tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - transform.position));
+			Destroy(tileList[tileList.Count-1]);
+			tileList.RemoveAt(tileList.Count-1);
+			maxMoves += 2;
+			return;
+		}
+		else if (tileList.Count == 1 && (transform.position.x == tilePos.x && transform.position.z == tilePos.z )) {
+			tempVector = Vector3.zero;
+			Destroy(tileList[tileList.Count-1]);
+			tileList.RemoveAt(tileList.Count-1);
+			maxMoves += 2;
+			return;
+		}
+		foreach(GameObject tile in tileList) {
+			if (tile.transform.position == tilePos) {
+				maxMoves++; //Spent point is refunded
+				tempVector -= moveDirection;
+				return;
+			}
+		}
+		tileList.Add(Instantiate(origTile, tilePos, Quaternion.identity));
+		
+		/*GameObject newTile = new GameObject("tile"+(tileList.Count + 1));
+		newTile.AddComponent<MeshFilter>();
+		newTile.GetComponent<MeshFilter>().mesh = (Mesh)AssetDatabase.LoadAssetAtPath("Assets/Meshes/tile.fbx", typeof(Mesh));
+		newTile.AddComponent<MeshRenderer>();*/
+	}		
+	
 	// Default text of the button
 	public string modeButtonText = "Free-roam";
 	private string targetText = "No target";
@@ -223,7 +332,7 @@ public class charControl : MonoBehaviour
 		GUI.Button(new Rect(0, Screen.height-300, 150, 50), ("Targeting: "+targetText));
 		GUI.Button(new Rect(Screen.width-300, Screen.height-300, 250, 50), ("Current turn: "+actorText));
 		GUI.Button(new Rect(Screen.width-350, Screen.height-250, 350, 50), ("Combat log \n "+latestAction));
-		GUI.Button(new Rect(0, Screen.height-250, 200, 50), ("Cycle targets in combat with F. \n Attack with R."));
+		GUI.Button(new Rect(0, Screen.height-250, 200, 90), ("Interact with E. \n Cycle targets in combat with F. \n Attack with R. \n Plan your movement with 5 tiles \n Confirm with Enter."));
 		if (GUI.Button (new Rect(0, Screen.height-150, 100, 50), modeButtonText) && !inCombat) {
 			if (turnBased) {
 			//turnBased = false;
@@ -252,5 +361,5 @@ public class charControl : MonoBehaviour
 		targetIndicator.transform.position = new Vector3(0,-3,0);
 		updateTarget("None");
 	}
-
+	
 }

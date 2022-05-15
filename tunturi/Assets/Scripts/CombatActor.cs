@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class CombatActor : MonoBehaviour {
 	// DPA, HP, Armor, AP
+	private bool isDodging = false;
+	private int baseMissChance = 33;
 	protected int[] stats = {0,0,0,0};
 	
 	public CombatActor() {
@@ -112,7 +114,13 @@ public class CombatActor : MonoBehaviour {
 				return;
 				}
 			if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
-				
+				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance) {
+					SendMessage("logAction", name+"'s attack missed!");
+					return;
+				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance+27))  {
+					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					return;
+				}
 				// Attack is logged to GUI combat log				
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
@@ -160,6 +168,13 @@ public class CombatActor : MonoBehaviour {
 				}
 			if (targetedEnemy.TryGetComponent(out CombatActor targetActor)) {
 				// Attack is logged to GUI combat log				
+				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance-16)) {
+					SendMessage("logAction", name+"'s attack missed!");
+					return;
+				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance)  {
+					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					return;
+				}
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
 					if(play.TryGetComponent(out charControl cControl)) {
@@ -196,6 +211,16 @@ public class CombatActor : MonoBehaviour {
 	/*void measure() {
 		
 	}*/
+	// Encapsulated functions for accessing dodge, used in CombatManager to reset dodge state
+	public void dodge() {
+		isDodging = true;
+	}
+	public void unDodge() {
+		isDodging = false;
+	}
+	public bool dodgeState() {
+		return isDodging;
+	}
 	
 	public int getDMG() {
 		return stats[0];

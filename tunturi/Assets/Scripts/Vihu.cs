@@ -38,6 +38,7 @@ class Vihu : CombatActor {
 		if(other.tag != "PlayerFaction" || inCombat) {return;}
 		Debug.Log("I see you!");
 		if (other.TryGetComponent(out charControl player)) {
+			//SendMessage("haltMovement");
 			inCombat = true;
 			player.initCombat();
 		}
