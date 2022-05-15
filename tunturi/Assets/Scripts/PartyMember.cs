@@ -9,6 +9,7 @@ public class PartyMember : CombatActor
 		public int HP;
 		public int ARMOR;
 		public int AP;*/
+		public string characterName;
 		public PartyMember() {
 		//name = charName;
 		stats[0] = 10;
