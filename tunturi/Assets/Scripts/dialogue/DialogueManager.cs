@@ -11,9 +11,8 @@ public class DialogueManager : MonoBehaviour
     public GameObject dialogueCanvas;
     public GameObject repliesContainer;
     public GameObject dialogueButtonPrefab;
-    public TextMeshProUGUI lineSpeakerOutput;
+    public TextMeshProUGUI lineSpeakerNameOutput;
     public TextMeshProUGUI lineOutput;
-    public GameObject[] replyButtons;
 
     // variables for playing dialogue audio stuffs
     public AudioSource voiceAudioSource;
@@ -33,6 +32,15 @@ public class DialogueManager : MonoBehaviour
     private Dialogue dialogue;
 
     private PartyManager partyManager;
+
+    public int buttonHeight = 60;
+    public int fontSize = 40;
+    // dialogue text colors for req check thingies
+    public Color checkFailedDialogueOptionColor;
+    public Color checkPassedDialogueOptionColor;
+    public Color normalDialogueOptionColor;
+    public Color speakerLineColor;
+    public Color speakerNameColor;
 
 
     void Start() {
@@ -58,24 +66,28 @@ public class DialogueManager : MonoBehaviour
     }
 
 
-    private void TerminateConversation() {
-        HideCanvas();
-        dialogue = null;
-    }
+
 
     // shows a line, selection of replies etc on screen
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
         DialogueLine dl = dialogue.lines[dialogueStage];
-        lineSpeakerOutput.text = dialogue.participants[dl.speakerId];
-        lineOutput.text = dl.line;
+        lineSpeakerNameOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerNameColor)}>{dialogue.participants[dl.speakerId]}";
+        lineOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerLineColor)}>{dl.line}";
 
         RemoveReplyButtons();
+
+        ResizeReplyContainerHeight(dl.replies.Length * 30);
 
         for (int i = 0; i < dl.replies.Length; i++) {
             CreateDialogueButton(dl.replies[i], i);
         }
         if (dialogue.voiceEffects) GenerateDialogueVoiceQueue(dl.line);
+    }
+
+    private void ResizeReplyContainerHeight(int height) {
+        RectTransform rt = repliesContainer.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x, height);
     }
 
 
@@ -86,12 +98,18 @@ public class DialogueManager : MonoBehaviour
                                                 .Select(requirement => partyManager.CompareProperty(requirement))
                                                 .All(response => response.Item1);
         string prefix = reply.requirements.Length != 0 ? $"[{reply.requirements[0].type} {partyManager.CompareProperty(reply.requirements[0]).Item2}/{reply.requirements[0].value}] " : "";
+        string coloredPrefixString = $"<color=#{ColorUtility.ToHtmlStringRGB(requirementsPassed ? checkPassedDialogueOptionColor : checkFailedDialogueOptionColor)}>{prefix}";
 
         GameObject button = (GameObject)Instantiate(dialogueButtonPrefab, repliesContainer.transform);
-        // button.transform.localPosition = new Vector3(0,-15 - 30 * buttonSlot,0);
         RectTransform buttonRT = button.GetComponent<RectTransform>();
-        buttonRT.anchoredPosition = new Vector2(buttonRT.anchoredPosition.x, buttonRT.anchoredPosition.y - 15 - 30 * buttonSlot);
-        button.GetComponentInChildren<TMP_Text>().text = prefix + reply.replyLine;
+        buttonRT.anchoredPosition = new Vector2(buttonRT.anchoredPosition.x, buttonRT.anchoredPosition.y - buttonHeight / 2 - buttonHeight * buttonSlot);
+        var buttonText = button.GetComponentInChildren<TMP_Text>();
+        // button.GetComponentInChildren<TMP_Text>().text = prefix + reply.replyLine;
+        buttonText.text = $"{coloredPrefixString}<color=#000000> {reply.replyLine}";
+        buttonText.fontSize = fontSize;
+        // buttonText.color = reply.requirements.Length != 0 && requirementsPassed ? checkPassedDialogueOption
+        //                  : reply.requirements.Length != 0 && !requirementsPassed ? checkFailedDialogueOption 
+        //                  : normalDialogueOption;
         if (requirementsPassed) {
             button.GetComponent<Button>().onClick.AddListener(() => HandleStageChange(reply));
         }
@@ -131,6 +149,13 @@ public class DialogueManager : MonoBehaviour
         this.dialogue = dialogue;
         dialogueStage = 0;
         ShowCanvas();
+        Debug.Log("TODO: lock player position while dialogue is active");
+    }
+
+    private void TerminateConversation() {
+        HideCanvas();
+        dialogue = null;
+        Debug.Log("TODO: unlock player position while dialogue is active");
     }
 
     public void ShowCanvas() { dialogueCanvas.SetActive(true); }
