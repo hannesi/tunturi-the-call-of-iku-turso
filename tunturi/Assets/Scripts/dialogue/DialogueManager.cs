@@ -46,6 +46,7 @@ public class DialogueManager : MonoBehaviour
     void Start() {
         partyManager = GameObject.Find("PartyManager").GetComponent<PartyManager>();
     }
+
     void Update() {
         // check if dialogue voice line status
         if (!voiceAudioSource.isPlaying && clipQueue.Count > 0) {
@@ -72,7 +73,7 @@ public class DialogueManager : MonoBehaviour
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
         DialogueLine dl = dialogue.lines[dialogueStage];
-        lineSpeakerNameOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerNameColor)}>{dialogue.participants[dl.speakerId]}";
+        lineSpeakerNameOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerNameColor)}>{dialogue.participants[dl.speakerId].name}";
         lineOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerLineColor)}>{dl.line}";
 
         RemoveReplyButtons();
