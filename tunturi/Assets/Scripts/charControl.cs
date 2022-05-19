@@ -14,6 +14,7 @@ public class charControl : MonoBehaviour
 	private Material materiaali; 
 	private GameObject targetIndicator;
 	private GameObject grid;
+	private AudioManager audioManager;
 	
 	public float moveSpeed = 3.0f;
 	public float gravity = 9.81f;
@@ -33,6 +34,8 @@ public class charControl : MonoBehaviour
         controller = gameObject.GetComponent("CharacterController") as CharacterController;
 		
 		mainCamera = gameObject.GetComponentInChildren<Camera>();
+		
+		audioManager = GetComponent<AudioManager>();
     }
 	
 	private Vector3 tempVector; //Temporary vector for storing movement in TB-mode
@@ -180,6 +183,7 @@ public class charControl : MonoBehaviour
 		}
 		if(combatants.Count == 1 && inCombat) {
 			inCombat = false;
+			audioManager.swapExplorationTrack();
 			flipTurnbased();
 		}			
 		
@@ -231,6 +235,7 @@ public class charControl : MonoBehaviour
 		if(!turnBased) {flipTurnbased();}
 		combatants = new List<CombatActor>();
 		CombatManager.findCombatants(combatants);
+		if (!inCombat) {audioManager.swapCombatTrack();} //Prevents audio restart when 'restarting' combat on new enemy entry
 		inCombat = true;
 		/*GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 		Debug.Log("Found "+temp.Length+" allies");

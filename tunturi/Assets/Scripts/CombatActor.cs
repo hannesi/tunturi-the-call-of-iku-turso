@@ -7,11 +7,22 @@ public class CombatActor : MonoBehaviour {
 	// DPA, HP, Armor, AP
 	private bool isDodging = false;
 	private int baseMissChance = 33;
+	private AudioSource tempSource;
 	protected int[] stats = {0,0,0,0};
+	
+	public AudioClip attackSound;
+	public AudioClip dodgeSound;
+	//public AudioClip missSound;
 	
 	public CombatActor() {
 		stats[0] = 1;
 	}
+	
+	void Start() {
+		tempSource = gameObject.AddComponent<AudioSource>();
+		tempSource.volume = 0.3f;
+	}
+	
 	/*private string name;
 	public string Name{
 		get{return name;}
@@ -116,9 +127,17 @@ public class CombatActor : MonoBehaviour {
 			if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
 				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance) {
 					SendMessage("logAction", name+"'s attack missed!");
+					if (dodgeSound != null && tempSource != null) {
+						tempSource.clip = dodgeSound;
+						tempSource.Play();
+					}
 					return;
 				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance+27))  {
 					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					if (dodgeSound != null && tempSource != null) {
+						tempSource.clip = dodgeSound;
+						tempSource.Play();
+					}
 					return;
 				}
 				// Attack is logged to GUI combat log				
@@ -128,7 +147,10 @@ public class CombatActor : MonoBehaviour {
 						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
 					}
 				}				
-				
+				if (tempSource != null && attackSound != null) { // Creates a temporary source to play attack sound, if it exists
+						tempSource.clip = attackSound;
+						tempSource.Play();
+				}
 				Debug.Log(gameObject.name + " strikes " + targetActor.name + " and deals " + stats[0] + " damage!");
 				targetActor.setHP(targetActor.stats[1] - stats[0]);
 				Debug.Log(targetActor.name + " HP is now "+targetActor.getHP());
@@ -170,15 +192,27 @@ public class CombatActor : MonoBehaviour {
 				// Attack is logged to GUI combat log				
 				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance-16)) {
 					SendMessage("logAction", name+"'s attack missed!");
+					if (dodgeSound != null && tempSource != null) {
+						tempSource.clip = dodgeSound;
+						tempSource.Play();
+					}
 					return;
 				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance)  {
 					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					if (dodgeSound != null && tempSource != null) {
+						tempSource.clip = dodgeSound;
+						tempSource.Play();
+					}
 					return;
 				}
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
 					if(play.TryGetComponent(out charControl cControl)) {
 						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
+					}
+					if (tempSource != null && attackSound != null) { // Creates a temporary source to play attack sound, if it exists
+						tempSource.clip = attackSound;
+						tempSource.Play();
 					}
 				}
 				
