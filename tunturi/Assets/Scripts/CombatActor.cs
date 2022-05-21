@@ -8,7 +8,8 @@ public class CombatActor : MonoBehaviour {
 	private bool isDodging = false;
 	private int baseMissChance = 33;
 	private AudioSource tempSource;
-	protected int[] stats = {0,0,0,0};
+	protected float attackRange = 0;
+	public int[] stats = {0,0,0,0};
 	
 	public AudioClip attackSound;
 	public AudioClip dodgeSound;
@@ -106,10 +107,13 @@ public class CombatActor : MonoBehaviour {
 		}
 		
 	}
-	
 	public void attack(List<CombatActor> combatants) {
 		GameObject closestEnemy = target();
-		float maxRange = 8;
+		float maxRange = 8; // Set default, can be overriden if set on object creation
+		if (attackRange != 0) {
+			maxRange = attackRange;
+			Debug.Log("Setting new range...");
+		}
 		if (closestEnemy != null) {
 			if (Vector3.Distance(closestEnemy.transform.position, gameObject.transform.position) > maxRange ) {
 				
@@ -126,14 +130,16 @@ public class CombatActor : MonoBehaviour {
 				}
 			if (closestEnemy.TryGetComponent(out CombatActor targetActor)) {
 				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance) {
-					SendMessage("logAction", name+"'s attack missed!");
+					//SendMessage("logAction", name+"'s attack missed!");
+					sendLogMessage(name+"'s attack missed!");
 					if (dodgeSound != null && tempSource != null) {
 						tempSource.clip = dodgeSound;
 						tempSource.Play();
 					}
 					return;
 				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance+27))  {
-					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					//SendMessage("logAction", targetActor.name+" dodges the attack!");
+					sendLogMessage(name+" dodges the attack!");
 					if (dodgeSound != null && tempSource != null) {
 						tempSource.clip = dodgeSound;
 						tempSource.Play();
@@ -170,6 +176,17 @@ public class CombatActor : MonoBehaviour {
 			Debug.Log(name+"'s attack failed, no nearby targets");
 		}
 	}
+	// Method for sending messages to player log, for use in both enemies and friendlies
+	void sendLogMessage(string message) {
+		GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
+		foreach(var play in temp) {
+			if(play.TryGetComponent(out charControl cControl)) {
+				cControl.logAction(message);
+			}
+		}		
+	}
+	
+	
 	// Alternate attack to a predetermined enemy
 	public void attack(List<CombatActor> combatants, GameObject targetedEnemy) {
 		float maxRange = 12;
@@ -191,14 +208,16 @@ public class CombatActor : MonoBehaviour {
 			if (targetedEnemy.TryGetComponent(out CombatActor targetActor)) {
 				// Attack is logged to GUI combat log				
 				if(!targetActor.isDodging && UnityEngine.Random.Range(0,100) < (baseMissChance-16)) {
-					SendMessage("logAction", name+"'s attack missed!");
+					//SendMessage("logAction", name+"'s attack missed!");
+					sendLogMessage(name+"'s attack missed!");
 					if (dodgeSound != null && tempSource != null) {
 						tempSource.clip = dodgeSound;
 						tempSource.Play();
 					}
 					return;
 				} else if (targetActor.isDodging && UnityEngine.Random.Range(0,100) < baseMissChance)  {
-					SendMessage("logAction", targetActor.name+" dodges the attack!");
+					//SendMessage("logAction", targetActor.name+" dodges the attack!");
+					sendLogMessage(name+"dodges the attack!");
 					if (dodgeSound != null && tempSource != null) {
 						tempSource.clip = dodgeSound;
 						tempSource.Play();

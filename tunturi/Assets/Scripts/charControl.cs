@@ -48,6 +48,11 @@ public class charControl : MonoBehaviour
     {
 		if (Input.GetKeyDown("j")) {
 			mainCamera.transform.RotateAround(transform.position, Vector3.up, 45);
+			/*Vector3 tempVec = new Vector3(-107,0,-32);
+			Vector3[] test = Vihu.calcTileDistance(tempVec);
+			for (int i  = 0; i<test.Length; i++) {
+				Debug.Log(test[i].ToString());
+			}*/
 		}
 		if (Input.GetKeyDown("l")) {
 			mainCamera.transform.RotateAround(transform.position, Vector3.up, -45);
@@ -109,6 +114,27 @@ public class charControl : MonoBehaviour
 					placeTile(Vector3.forward);
 				} 
 			}
+			if (inCombat && Input.GetKeyDown("q") && (maxMoves > 1) ) {
+				
+				if (gameObject.TryGetComponent(out PartyMember controlledMember)) {
+					if (playerTarget != null) {
+						controlledMember.attack(combatants, playerTarget);
+						maxMoves -= 2;
+					} else {
+						controlledMember.attack(combatants);
+						maxMoves--;
+					}	
+				}
+			}
+			if (inCombat && Input.GetKeyDown("z") && (maxMoves > 0) ) {
+				if (gameObject.TryGetComponent(out PartyMember controlledMember)) {
+					if (!controlledMember.dodgeState()) {
+						controlledMember.dodge();
+						maxMoves--;
+						logAction(name+" is now dodging until next turn");
+					}
+				}
+			}
 			// A visual indicator for 0 moves
 			if (maxMoves == 0) { 
 					materiaali.SetColor("_Color",Color.red);
@@ -127,8 +153,8 @@ public class charControl : MonoBehaviour
 					targetIndicator.transform.position = (playerTarget.transform.position + (2*Vector3.up));
 				}
 			}
-			if (Input.GetKeyDown("enter")) {
-				transform.Translate(tempVector);
+			if (Input.GetKeyDown("k")) {
+				if (tileList.Count - maxMoves >= 0) {transform.Translate(tempVector);}
 				tempVector = Vector3.zero;
 				wipeTiles();
 				grid.transform.position = transform.position;
@@ -337,8 +363,8 @@ public class charControl : MonoBehaviour
 		GUI.Button(new Rect(0, Screen.height-300, 150, 50), ("Targeting: "+targetText));
 		GUI.Button(new Rect(Screen.width-300, Screen.height-300, 250, 50), ("Current turn: "+actorText));
 		GUI.Button(new Rect(Screen.width-350, Screen.height-250, 350, 50), ("Combat log \n "+latestAction));
-		GUI.Button(new Rect(0, Screen.height-250, 200, 90), ("Interact with E. \n Cycle targets in combat with F. \n Attack with R. \n Plan your movement with 5 tiles \n Confirm with Enter."));
-		if (GUI.Button (new Rect(0, Screen.height-150, 100, 50), modeButtonText) && !inCombat) {
+		GUI.Button(new Rect(0, Screen.height-250, 200, 130), ("Interact with E. \n Cycle targets in combat with F. \n You have 5 AP per turn in combat \n Attack with Q. (2 AP) \n Activate Dodge with Z (1 AP) \n Move with tiles (1 AP/tile). \n Confirm movement with K. \n End turn with R"));
+		if (GUI.Button (new Rect(0, Screen.height-110, 100, 50), modeButtonText) && !inCombat) {
 			if (turnBased) {
 			//turnBased = false;
 				flipTurnbased();

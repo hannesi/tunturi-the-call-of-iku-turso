@@ -8,8 +8,13 @@ public class CombatManager : MonoBehaviour
 	private static int round = 1;
 	public static string processTurn(List<CombatActor> combatants, bool inCombat) {
 		Debug.Log("Processing turn "+(turn+1)+" of round "+round);
-
-		combatants[turn].attack(combatants);
+		if (combatants[turn].TryGetComponent(out protoMeleeEnemy proto) ) {
+			proto.actionSequence(combatants);
+		} else if (combatants[turn].TryGetComponent(out charControl character) ) {
+			// Does nothing, attacking moved to Q
+		} else {
+			combatants[turn].attack(combatants);
+		}
 		if (combatants[turn].TryGetComponent(out Vihu enemyNow)) {
 			//enemy.indicateTurn();
 			//combatants[turn].attack(combatants);
@@ -22,6 +27,9 @@ public class CombatManager : MonoBehaviour
 			foreach(var comb in combatants) {
 				if (comb.TryGetComponent(out charControl cControl)) {
 					cControl.replenishAP();
+				}
+				if (comb.dodgeState()) {
+					comb.unDodge();
 				}
 			}
 		}
@@ -44,9 +52,11 @@ public class CombatManager : MonoBehaviour
 			round++;
 		}
 		Debug.Log("Processing turn "+(turn+1)+" of round "+round);
-		if (combatants[turn].TryGetComponent(out charControl cControl)) {
-			Debug.Log("Targeted attack!");
-			combatants[turn].attack(combatants, playerTarget);
+		if (combatants[turn].TryGetComponent(out protoMeleeEnemy proto) ) {
+			proto.actionSequence(combatants);
+		} else if (combatants[turn].TryGetComponent(out charControl cControl)) {
+			//Debug.Log("Targeted attack!");
+			//combatants[turn].attack(combatants, playerTarget);
 		}
 		else {
 			combatants[turn].attack(combatants);
