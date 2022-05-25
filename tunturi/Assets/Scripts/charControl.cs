@@ -322,7 +322,7 @@ public class charControl : MonoBehaviour
 		} else {
 			tilePos += tileList[tileList.Count - 1].transform.position;
 		}
-		tilePos.y = 0.5f;
+		tilePos.y = transform.position.y - 0.3f;
 		if (tileList.Count > 1 && tileList[tileList.Count-2].transform.position == tilePos) {
 			tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - tileList[tileList.Count-2].transform.position));
 			//tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - transform.position));
