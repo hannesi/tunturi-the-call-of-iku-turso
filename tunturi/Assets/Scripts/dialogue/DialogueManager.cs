@@ -13,6 +13,7 @@ public class DialogueManager : MonoBehaviour
     public GameObject dialogueButtonPrefab;
     public TextMeshProUGUI lineSpeakerNameOutput;
     public TextMeshProUGUI lineOutput;
+    public Image speakerPortrait;
 
     // variables for playing dialogue audio stuffs
     public AudioSource voiceAudioSource;
@@ -41,6 +42,12 @@ public class DialogueManager : MonoBehaviour
     public Color normalDialogueOptionColor;
     public Color speakerLineColor;
     public Color speakerNameColor;
+
+    // dialogue ui sounds
+    public AudioSource clickAudioSource;
+    public AudioClip regularSound;
+    public AudioClip successSound;
+    public AudioClip failureSound;
 
 
     void Start() {
@@ -73,6 +80,7 @@ public class DialogueManager : MonoBehaviour
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
         DialogueLine dl = dialogue.lines[dialogueStage];
+        speakerPortrait.sprite = dialogue.participants[dl.speakerId].GetPortraitByMood(dl.mood);
         lineSpeakerNameOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerNameColor)}>{dialogue.participants[dl.speakerId].name}";
         lineOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerLineColor)}>{dl.line}";
 
@@ -105,12 +113,15 @@ public class DialogueManager : MonoBehaviour
         RectTransform buttonRT = button.GetComponent<RectTransform>();
         buttonRT.anchoredPosition = new Vector2(buttonRT.anchoredPosition.x, buttonRT.anchoredPosition.y - buttonHeight / 2 - buttonHeight * buttonSlot);
         var buttonText = button.GetComponentInChildren<TMP_Text>();
-        // button.GetComponentInChildren<TMP_Text>().text = prefix + reply.replyLine;
         buttonText.text = $"{coloredPrefixString}<color=#000000> {reply.replyLine}";
         buttonText.fontSize = fontSize;
-        // buttonText.color = reply.requirements.Length != 0 && requirementsPassed ? checkPassedDialogueOption
-        //                  : reply.requirements.Length != 0 && !requirementsPassed ? checkFailedDialogueOption 
-        //                  : normalDialogueOption;
+        // apply clicking sound
+        button.GetComponent<Button>().onClick.AddListener(() => { 
+            clickAudioSource.clip = reply.requirements.Length == 0 ? regularSound
+                                  : requirementsPassed ? successSound
+                                  : failureSound;
+            clickAudioSource.Play();
+        });
         if (requirementsPassed) {
             button.GetComponent<Button>().onClick.AddListener(() => HandleStageChange(reply));
         }
@@ -133,6 +144,8 @@ public class DialogueManager : MonoBehaviour
     }
 
     private void GenerateDialogueVoiceQueue(string line) {
+        // TODO: SOS: Laastari :D Pakko olla ainakin yks silence line
+        clipQueue.Enqueue(silenceLines[0]);
         foreach (string s in line.Split(' '))
         {
             // alla oleva mysteerivakio 

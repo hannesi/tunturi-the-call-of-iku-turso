@@ -360,11 +360,11 @@ public class charControl : MonoBehaviour
 	private string latestAction = "Nothing happened";
 	// GUI-elements for HUD, current implementation contains a button for movement mode which reactively changes its' text
 	void OnGUI() {
-		GUI.Button(new Rect(0, Screen.height-300, 150, 50), ("Targeting: "+targetText));
-		GUI.Button(new Rect(Screen.width-300, Screen.height-300, 250, 50), ("Current turn: "+actorText));
-		GUI.Button(new Rect(Screen.width-350, Screen.height-250, 350, 50), ("Combat log \n "+latestAction));
-		GUI.Button(new Rect(0, Screen.height-250, 200, 130), ("Interact with E. \n Cycle targets in combat with F. \n You have 5 AP per turn in combat \n Attack with Q. (2 AP) \n Activate Dodge with Z (1 AP) \n Move with tiles (1 AP/tile). \n Confirm movement with K. \n End turn with R"));
-		if (GUI.Button (new Rect(0, Screen.height-110, 100, 50), modeButtonText) && !inCombat) {
+		GUI.Button(new Rect(0, Screen.height-700, 150, 50), ("Targeting: "+targetText));
+		GUI.Button(new Rect(Screen.width-300, Screen.height-700, 250, 50), ("Current turn: "+actorText));
+		GUI.Button(new Rect(Screen.width-350, Screen.height-650, 350, 50), ("Combat log \n "+latestAction));
+		GUI.Button(new Rect(0, Screen.height-650, 200, 130), ("Interact with E. \n Cycle targets in combat with F. \n You have 5 AP per turn in combat \n Attack with Q. (2 AP) \n Activate Dodge with Z (1 AP) \n Move with tiles (1 AP/tile). \n Confirm movement with K. \n End turn with R"));
+		if (GUI.Button (new Rect(0, Screen.height-510, 100, 50), modeButtonText) && !inCombat) {
 			if (turnBased) {
 			//turnBased = false;
 				flipTurnbased();
