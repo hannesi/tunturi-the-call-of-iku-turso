@@ -10,6 +10,10 @@ public class PartyMember : CombatActor
 		public int ARMOR;
 		public int AP;*/
 		public string characterName;
+
+		// TODO: alla oleva muuttuja on valiaikainen combatUI:n luomista varten oleva pokale
+		public int maxHP = 150;
+
 		public PartyMember() {
 		//name = charName;
 		stats[0] = 10;

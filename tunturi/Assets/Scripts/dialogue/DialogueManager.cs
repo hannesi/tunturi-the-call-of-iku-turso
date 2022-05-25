@@ -42,6 +42,12 @@ public class DialogueManager : MonoBehaviour
     public Color speakerLineColor;
     public Color speakerNameColor;
 
+    // dialogue ui sounds
+    public AudioSource clickAudioSource;
+    public AudioClip regularSound;
+    public AudioClip successSound;
+    public AudioClip failureSound;
+
 
     void Start() {
         partyManager = GameObject.Find("PartyManager").GetComponent<PartyManager>();
@@ -105,12 +111,15 @@ public class DialogueManager : MonoBehaviour
         RectTransform buttonRT = button.GetComponent<RectTransform>();
         buttonRT.anchoredPosition = new Vector2(buttonRT.anchoredPosition.x, buttonRT.anchoredPosition.y - buttonHeight / 2 - buttonHeight * buttonSlot);
         var buttonText = button.GetComponentInChildren<TMP_Text>();
-        // button.GetComponentInChildren<TMP_Text>().text = prefix + reply.replyLine;
         buttonText.text = $"{coloredPrefixString}<color=#000000> {reply.replyLine}";
         buttonText.fontSize = fontSize;
-        // buttonText.color = reply.requirements.Length != 0 && requirementsPassed ? checkPassedDialogueOption
-        //                  : reply.requirements.Length != 0 && !requirementsPassed ? checkFailedDialogueOption 
-        //                  : normalDialogueOption;
+        // apply clicking sound
+        button.GetComponent<Button>().onClick.AddListener(() => { 
+            clickAudioSource.clip = reply.requirements.Length == 0 ? regularSound
+                                  : requirementsPassed ? successSound
+                                  : failureSound;
+            clickAudioSource.Play();
+        });
         if (requirementsPassed) {
             button.GetComponent<Button>().onClick.AddListener(() => HandleStageChange(reply));
         }
