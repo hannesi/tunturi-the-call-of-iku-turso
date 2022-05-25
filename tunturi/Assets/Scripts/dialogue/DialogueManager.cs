@@ -13,6 +13,7 @@ public class DialogueManager : MonoBehaviour
     public GameObject dialogueButtonPrefab;
     public TextMeshProUGUI lineSpeakerNameOutput;
     public TextMeshProUGUI lineOutput;
+    public Image speakerPortrait;
 
     // variables for playing dialogue audio stuffs
     public AudioSource voiceAudioSource;
@@ -79,6 +80,7 @@ public class DialogueManager : MonoBehaviour
     private void ShowLine() {
         Debug.Log("showing stage: " + dialogueStage);
         DialogueLine dl = dialogue.lines[dialogueStage];
+        speakerPortrait.sprite = dialogue.participants[dl.speakerId].GetPortraitByMood(dl.mood);
         lineSpeakerNameOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerNameColor)}>{dialogue.participants[dl.speakerId].name}";
         lineOutput.text = $"<color=#{ColorUtility.ToHtmlStringRGB(speakerLineColor)}>{dl.line}";
 
@@ -142,6 +144,8 @@ public class DialogueManager : MonoBehaviour
     }
 
     private void GenerateDialogueVoiceQueue(string line) {
+        // TODO: SOS: Laastari :D Pakko olla ainakin yks silence line
+        clipQueue.Enqueue(silenceLines[0]);
         foreach (string s in line.Split(' '))
         {
             // alla oleva mysteerivakio 

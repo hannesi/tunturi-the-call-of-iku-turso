@@ -30,15 +30,5 @@ public class HealthBar : MonoBehaviour
         currentBarImage.sprite = barImages[imageIndex];
     }
 
-    public void SetAP(int apCurrent, int apMax) {
-        Debug.Log("TODO: Show AP in combat UI");
-    }
 
-    public void Show() {
-        Debug.Log("TODO: Show combat UI");
-    }
-
-    public void Hide() {
-        Debug.Log("TODO: Hide combat UI");
-    }
 }
