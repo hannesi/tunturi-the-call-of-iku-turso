@@ -7,9 +7,9 @@ public class Item
 {
 	private string name;
 	private int statsAffected;
-	private int[] statRefIDs; //References to attributes increased
+	public int[] statRefIDs; //References to attributes increased
 	//private PropertyType[] statRefs;
-	private int[] statBonuses;
+	public int[] statBonuses;
 	private bool isEquipped;
 	
 	public Item() {

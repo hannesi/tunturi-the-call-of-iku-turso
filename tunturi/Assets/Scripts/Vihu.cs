@@ -13,7 +13,7 @@ class Vihu : CombatActor {
 	// DPA, HP, Armor, AP
 	
 	public Vihu() {
-		stats = new int[]{3, 24, 13, 5};
+		stats = new int[]{6, 24, 0, 5};
 		/*stats[0] = 3;
 		stats[1] = 24;
 		stats[2] = 13;

@@ -15,6 +15,8 @@ public class charControl : MonoBehaviour
 	private GameObject targetIndicator;
 	private GameObject grid;
 	private AudioManager audioManager;
+	private Animator playerAnimator;
+	private GameObject combatUi;
 	
 	public float moveSpeed = 3.0f;
 	public float gravity = 9.81f;
@@ -30,12 +32,12 @@ public class charControl : MonoBehaviour
 		targetIndicator = GameObject.CreatePrimitive(PrimitiveType.Capsule);
 		targetIndicator.transform.position = new Vector3(0,-3,0);
 		targetIndicator.transform.localScale = new Vector3(0.25f,0.25f,0.25f);
-		materiaali = gameObject.GetComponent<Renderer>().material; // Haetaan ohjattavan materiaali moodivaihdoksia varten
+		materiaali = gameObject.GetComponentInChildren<Renderer>().material; // Haetaan ohjattavan materiaali moodivaihdoksia varten
         controller = gameObject.GetComponent("CharacterController") as CharacterController;
-		
 		mainCamera = gameObject.GetComponentInChildren<Camera>();
-		
+		playerAnimator = GetComponentInChildren<Animator>();
 		audioManager = GetComponent<AudioManager>();
+		combatUi = GameObject.Find("CombatUI");
     }
 	
 	private Vector3 tempVector; //Temporary vector for storing movement in TB-mode
@@ -46,6 +48,25 @@ public class charControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+		if (playerAnimator.GetBool("Dead")) {
+			return;
+		}
+		if (Input.GetKeyDown("o")) {
+			/*if (gameObject.TryGetComponent(out CombatActor playerActor)) {
+				playerActor.setHP(0);
+			}*/
+			if (combatUi.TryGetComponent(out CombatUIManager manager)) {
+				manager.Show();
+			}
+		}
+		if (Input.GetKeyDown("p")) {
+			/*if (gameObject.TryGetComponent(out CombatActor playerActor)) {
+				playerActor.setHP(0);
+			}*/
+			if (combatUi.TryGetComponent(out CombatUIManager manager)) {
+				manager.Hide();
+			}
+		}
 		if (Input.GetKeyDown("j")) {
 			mainCamera.transform.RotateAround(transform.position, Vector3.up, 45);
 			/*Vector3 tempVec = new Vector3(-107,0,-32);
@@ -68,7 +89,7 @@ public class charControl : MonoBehaviour
 			//GameObject grid = GameObject.Find("baseGrid");
 			if (turnBased) {
 			grid.transform.position = transform.position;
-			grid.transform.Translate(new Vector3 (0,-0.3f, 0));
+			grid.transform.Translate(new Vector3 (0,0.2f, 0));
 			} else {
 				grid.transform.position = new Vector3(0,0,0);
 			}
@@ -78,6 +99,7 @@ public class charControl : MonoBehaviour
 		float horizontalInput = Input.GetAxis("Horizontal");
 		if (turnBased)  // Turn-based movement logic - Once the amount of moves has been used, controls are locked
 		{	// TODO tutki Raycast, josko tehokkaasti tarkastaisi onko ruutu vapaa
+			playerAnimator.SetFloat("Forward",0);
 			if(materiaali.GetColor("_Color") != Color.green && materiaali.GetColor("_Color") != Color.red) {
 				materiaali.SetColor("_Color",Color.green);
 			}
@@ -123,7 +145,8 @@ public class charControl : MonoBehaviour
 					} else {
 						controlledMember.attack(combatants);
 						maxMoves--;
-					}	
+					}
+					
 				}
 			}
 			if (inCombat && Input.GetKeyDown("z") && (maxMoves > 0) ) {
@@ -146,6 +169,17 @@ public class charControl : MonoBehaviour
 				else {
 					updateCurrentActor(CombatManager.processTurn(combatants, inCombat));
 				}
+				HealthBar bar = combatUi.GetComponentInChildren<HealthBar>();
+				if (gameObject.TryGetComponent(out CombatActor playerActor)) {
+					Debug.Log("Calling with "+playerActor.getHP() + " " + playerActor.getHPMax());
+					bar.SetHealth(playerActor.getHP(), playerActor.getHPMax());
+				}
+				
+				/*if (gameObject.TryGetComponent(out CombatActor playerActor)) {
+					if (playerActor.getHP() < 1 && !(playerAnimator.GetBool("Dead")) ) {
+						playerAnimator.SetBool("Dead", true);
+					}
+				}*/
 			}
 			if (inCombat && Input.GetKeyDown("f")) {
 				if (gameObject.TryGetComponent(out CombatActor playerActor)) {
@@ -158,7 +192,7 @@ public class charControl : MonoBehaviour
 				tempVector = Vector3.zero;
 				wipeTiles();
 				grid.transform.position = transform.position;
-				grid.transform.Translate(new Vector3 (0,-0.3f, 0));
+				grid.transform.Translate(new Vector3 (0,0.2f, 0));
 				if (!inCombat) {
 					replenishAP();
 				}
@@ -173,6 +207,8 @@ public class charControl : MonoBehaviour
 			
 			Vector3 mvmnt = new Vector3(0, 0 , verticalInput);
 			Vector3 rotate = new Vector3(0, horizontalInput*Time.deltaTime*120, 0);
+			
+			playerAnimator.SetFloat("Forward",verticalInput);
 			controller.Move(transform.TransformDirection(mvmnt) * moveSpeed * Time.deltaTime);
 			transform.Rotate(rotate, Space.Self);
 			if (controller.isGrounded && pVelocity.y < 0) {
@@ -210,8 +246,17 @@ public class charControl : MonoBehaviour
 		if(combatants.Count == 1 && inCombat) {
 			inCombat = false;
 			audioManager.swapExplorationTrack();
+			if (combatUi.TryGetComponent(out CombatUIManager manager)) {
+				manager.Hide();
+			}
 			flipTurnbased();
-		}			
+		}
+		if (gameObject.TryGetComponent(out CombatActor playerBctor)) {
+			//Debug.Log("check lifesigns");
+			if (playerBctor.getHP() < 1 && !(playerAnimator.GetBool("Dead")) ) {
+				playerAnimator.SetBool("Dead", true);
+			}
+		}
 		
     }
 	// Universal function for flipping the turn-based mode
@@ -227,7 +272,7 @@ public class charControl : MonoBehaviour
 		}
 		else { // Turn-based mode is engaged, the amount of moves a player has
 			grid.transform.position = transform.position;
-			grid.transform.Translate(new Vector3 (0,-0.3f, 0));
+			grid.transform.Translate(new Vector3 (0,-0.1f, 0));
 			turnBased = true;
 			modeButtonText = "Turn-based";
 			gameObject.transform.rotation = Quaternion.identity;
@@ -263,6 +308,10 @@ public class charControl : MonoBehaviour
 		CombatManager.findCombatants(combatants);
 		if (!inCombat) {audioManager.swapCombatTrack();} //Prevents audio restart when 'restarting' combat on new enemy entry
 		inCombat = true;
+		if (combatUi.TryGetComponent(out CombatUIManager manager)) {
+			manager.Show();
+		}
+		
 		/*GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 		Debug.Log("Found "+temp.Length+" allies");
 		for(int i = 0; i < temp.Length; i++) {
@@ -322,7 +371,7 @@ public class charControl : MonoBehaviour
 		} else {
 			tilePos += tileList[tileList.Count - 1].transform.position;
 		}
-		tilePos.y = transform.position.y - 0.3f;
+		tilePos.y = transform.position.y + 0.15f;
 		if (tileList.Count > 1 && tileList[tileList.Count-2].transform.position == tilePos) {
 			tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - tileList[tileList.Count-2].transform.position));
 			//tempVector -= (moveDirection + (tileList[tileList.Count-1].transform.position - transform.position));
@@ -360,11 +409,11 @@ public class charControl : MonoBehaviour
 	private string latestAction = "Nothing happened";
 	// GUI-elements for HUD, current implementation contains a button for movement mode which reactively changes its' text
 	void OnGUI() {
-		GUI.Button(new Rect(0, Screen.height-700, 150, 50), ("Targeting: "+targetText));
-		GUI.Button(new Rect(Screen.width-300, Screen.height-700, 250, 50), ("Current turn: "+actorText));
-		GUI.Button(new Rect(Screen.width-350, Screen.height-650, 350, 50), ("Combat log \n "+latestAction));
-		GUI.Button(new Rect(0, Screen.height-650, 200, 130), ("Interact with E. \n Cycle targets in combat with F. \n You have 5 AP per turn in combat \n Attack with Q. (2 AP) \n Activate Dodge with Z (1 AP) \n Move with tiles (1 AP/tile). \n Confirm movement with K. \n End turn with R"));
-		if (GUI.Button (new Rect(0, Screen.height-510, 100, 50), modeButtonText) && !inCombat) {
+		GUI.Button(new Rect(0, (Screen.height/1.5f), 150, 50), ("Targeting: "+targetText));
+		GUI.Button(new Rect((Screen.width-250), (Screen.height/1.2f), 250, 50), ("Current turn: "+actorText));
+		GUI.Button(new Rect((float)(Screen.width*0.8), (Screen.height/1.5f), 350, 50), ("Combat log \n "+latestAction));
+		GUI.Button(new Rect(0, (Screen.height/1.4f), 200, 150), ("Interact with E. \n Rotate camera with J & L \n Cycle targets in combat with F. \n You have 5 AP per turn in combat \n Attack with Q. (2 AP) \n Activate Dodge with Z (1 AP) \n Move with tiles (1 AP/tile). \n Confirm movement with K. \n End turn with R"));
+		if (GUI.Button (new Rect(0, (float)(Screen.height*0.9), 100, 50), modeButtonText) && !inCombat) {
 			if (turnBased) {
 			//turnBased = false;
 				flipTurnbased();
@@ -379,9 +428,18 @@ public class charControl : MonoBehaviour
 		}
     }
 	
-	public void updateTarget(string targetName) {
-		targetText = targetName;
+	public void updateTarget(GameObject target) {
+		if (target.TryGetComponent(out CombatActor targetActor)) {
+			targetText = target.name + " HP:"+targetActor.getHP();
+		} else {
+			targetText = target.name;
+		}
 	}
+	
+	public void resetTarget(string text) {
+		targetText = text;
+	}
+	
 	public void updateCurrentActor(string currentActor) {
 		actorText = currentActor;
 	}
@@ -390,7 +448,7 @@ public class charControl : MonoBehaviour
 	}
 	public void hideIndicator() {
 		targetIndicator.transform.position = new Vector3(0,-3,0);
-		updateTarget("None");
+		resetTarget("None");
 	}
 	
 }

@@ -6,10 +6,11 @@ using UnityEngine;
 public class CombatActor : MonoBehaviour {
 	// DPA, HP, Armor, AP
 	private bool isDodging = false;
-	private int baseMissChance = 33;
 	private AudioSource tempSource;
 	protected float attackRange = 0;
 	public int[] stats = {0,0,0,0};
+	private int baseMissChance = 33;
+	private int maxHealth;
 	
 	public AudioClip attackSound;
 	public AudioClip dodgeSound;
@@ -22,6 +23,7 @@ public class CombatActor : MonoBehaviour {
 	void Start() {
 		tempSource = gameObject.AddComponent<AudioSource>();
 		tempSource.volume = 0.3f;
+		maxHealth = stats[1];
 	}
 	
 	/*private string name;
@@ -77,11 +79,15 @@ public class CombatActor : MonoBehaviour {
 					dController.targetCounter++;
 				} else if (dController.playerTarget == nearbyColliders[i].gameObject) {
 					int k = i;
-					while (nearbyColliders[k].gameObject == dController.playerTarget) {
-						k++;
-						if (k > nearbyColliders.Length) {
+					bool breakFlag = false;
+					while (nearbyColliders[k].gameObject == dController.playerTarget && !breakFlag) {
+						//Debug.Log("k="+k+" ja nearbyColliders "+nearbyColliders.Length);
+						if (k >= nearbyColliders.Length-1) { // Checker
 							Debug.Log("breaking");
 							k = 0;
+							breakFlag = true;
+						} else {
+							k++;
 						}
 					}
 					i = k;
@@ -99,7 +105,7 @@ public class CombatActor : MonoBehaviour {
 		if (targetedActor != null) {
 		Debug.Log("i = "+i);
 		Debug.Log("Targeting "+targetedActor.name);
-		dController.updateTarget(targetedActor.name);
+		dController.updateTarget(targetedActor);
 		return targetedActor;
 		}
 		else {
@@ -150,19 +156,19 @@ public class CombatActor : MonoBehaviour {
 				GameObject[] temp = GameObject.FindGameObjectsWithTag("PlayerFaction");
 				foreach(var play in temp) {
 					if(play.TryGetComponent(out charControl cControl)) {
-						cControl.logAction(name+" strikes " + targetActor.name + " for " + stats[0] + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
+						cControl.logAction(name+" strikes " + targetActor.name + " for " + (stats[0] - targetActor.stats[2]) + " damage! \n "+targetActor.name+" has "+(targetActor.getHP()-stats[0])+"HP");
 					}
 				}				
 				if (tempSource != null && attackSound != null) { // Creates a temporary source to play attack sound, if it exists
 						tempSource.clip = attackSound;
 						tempSource.Play();
 				}
-				Debug.Log(gameObject.name + " strikes " + targetActor.name + " and deals " + stats[0] + " damage!");
-				targetActor.setHP(targetActor.stats[1] - stats[0]);
+				Debug.Log(gameObject.name + " strikes " + targetActor.name + " and deals " + (stats[0] - targetActor.stats[2]) + " damage!");
+				targetActor.setHP(targetActor.stats[1] - (stats[0] - targetActor.stats[2])); // Armor acts as flat dmg reduction
 				Debug.Log(targetActor.name + " HP is now "+targetActor.getHP());
-				if(targetActor.getHP() < 0) {
+				if(targetActor.getHP() <= 0) {
 					combatants.Remove(targetActor);
-					Destroy(closestEnemy);
+					if (targetActor.tag != "PlayerFaction") {Destroy(closestEnemy);}
 				}			
 			}
 		} else {
@@ -285,6 +291,9 @@ public class CombatActor : MonoBehaviour {
 	
 	public int getHP() {
 		return stats[1];
+	}
+	public int getHPMax() {
+		return maxHealth;
 	}
 	
 	public void setHP(int amount) {

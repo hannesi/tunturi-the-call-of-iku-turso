@@ -8,7 +8,6 @@ public class Food : MonoBehaviour, IInteractable
 
     public void Interact() {
         Debug.Log("A meal was eaten");
-		consumeMeal();
         StartCoroutine(showUiElement());
     }
 
@@ -16,17 +15,18 @@ public class Food : MonoBehaviour, IInteractable
         uiElementVisible = true;
         yield return new WaitForSeconds(3f);
         uiElementVisible = false;
+		consumeMeal();
     }
 
     void OnGUI() {
         if (uiElementVisible) {
-            GUI.Box(new Rect(10, 100, 200, 50), "You ate a hearty meal! \n Health restored by 12.");
+            GUI.Box(new Rect(10, 100, 200, 50), "You ate a hearty meal! \n Health restored by "+12);
         }
     }
 	
 	void consumeMeal() {
 		int layerMask = 1 << 8;
-			Collider[] collidersInRange = Physics.OverlapSphere(gameObject.transform.position, 1, layerMask);
+			Collider[] collidersInRange = Physics.OverlapSphere(gameObject.transform.position, 6, layerMask);
 			foreach (var obj in collidersInRange) {
 				// jos objektista loytyy IInteractablen toteuttava luokka, kutsutaan Interact() -funktiota
 				//PartyMember actor = obj.GetComponent<PartyMember>();
@@ -34,6 +34,7 @@ public class Food : MonoBehaviour, IInteractable
 					player.setHP(player.getHP() + 12);
 					}
 			}
+		Destroy(gameObject);
 	}
     // Start is called before the first frame update
     // void Start()

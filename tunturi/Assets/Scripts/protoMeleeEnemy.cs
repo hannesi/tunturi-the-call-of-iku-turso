@@ -16,7 +16,7 @@ class protoMeleeEnemy : Vihu
 	}
 	
 	void closeDistance(Vector3[] moveSequence) {
-		for (int i = 0; i < moveSequence.Length; i++) {
+		for (int i = 0; i < moveSequence.Length-1; i++) {
 			if(stats[3] < 1) {break;}
 			gameObject.transform.Translate(moveSequence[i], Space.World);
 			//Debug.Log("Moving "+moveSequence[i].ToString());
